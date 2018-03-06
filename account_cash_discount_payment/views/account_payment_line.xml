@@ -11,6 +11,7 @@
         <field name="arch" type="xml">
 
             <field name="date" position="after">
+                <field name="pay_with_discount"/>
                 <field name="discount_due_date"/>
                 <field name="discount_amount"/>
             </field>
@@ -29,6 +30,7 @@
             </field>
 
             <field name="amount_currency" position="after">
+                <field name="pay_with_discount"/>
                 <field name="discount_amount" />
             </field>
 
