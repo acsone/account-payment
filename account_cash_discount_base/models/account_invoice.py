@@ -17,7 +17,7 @@ class AccountInvoice(models.Model):
     _inherit = 'account.invoice'
 
     discount_percent = fields.Float(
-        string="Cash Discount (%)",
+        string="Discount (%)",
         readonly=True,
         states=READONLY_STATES,
     )
@@ -94,7 +94,9 @@ class AccountInvoice(models.Model):
             rec.discount_due_date_readonly = rec.discount_due_date
 
     @api.multi
-    @api.onchange('discount_delay')
+    @api.onchange(
+        'discount_delay',
+    )
     def _onchange_discount_delay(self):
         date_today = datetime.today()
         for rec in self:
@@ -106,6 +108,16 @@ class AccountInvoice(models.Model):
                 date_invoice = date_today
             due_date = date_invoice + timedelta(days=rec.discount_delay)
             rec.discount_due_date = due_date
+
+    @api.multi
+    @api.onchange(
+        'payment_term_id',
+    )
+    def _onchange_payment_term_discount_options(self):
+        payment_term = self.payment_term_id
+        if payment_term and self.type in ('in_invoice', 'out_invoice'):
+            self.discount_percent = payment_term.discount_percent
+            self.discount_delay = payment_term.discount_delay
 
     @api.multi
     def action_move_create(self):

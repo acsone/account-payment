@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 10.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-06 08:07+0000\n"
-"PO-Revision-Date: 2018-03-06 08:07+0000\n"
+"POT-Creation-Date: 2018-03-06 08:41+0000\n"
+"PO-Revision-Date: 2018-03-06 08:41+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -38,8 +38,9 @@ msgstr "Sociétés"
 
 #. module: account_cash_discount_base
 #: model:ir.model.fields,field_description:account_cash_discount_base.field_account_invoice_discount_percent
-msgid "Cash Discount (%)"
-msgstr "Escompte (%)"
+#: model:ir.model.fields,field_description:account_cash_discount_base.field_account_payment_term_discount_percent
+msgid "Discount (%)"
+msgstr "Remise (%)"
 
 #. module: account_cash_discount_base
 #: model:ir.model.fields,field_description:account_cash_discount_base.field_account_invoice_discount_amount
@@ -48,6 +49,7 @@ msgstr "Montant de l'escompte"
 
 #. module: account_cash_discount_base
 #: model:ir.model.fields,field_description:account_cash_discount_base.field_account_invoice_discount_delay
+#: model:ir.model.fields,field_description:account_cash_discount_base.field_account_payment_term_discount_delay
 msgid "Discount Delay (days)"
 msgstr "Délai de l'escompte (jours)"
 
@@ -89,6 +91,11 @@ msgid "Invoice"
 msgstr "Facture"
 
 #. module: account_cash_discount_base
+#: model:ir.model,name:account_cash_discount_base.model_account_payment_term
+msgid "Payment Term"
+msgstr "Conditions de paiement"
+
+#. module: account_cash_discount_base
 #: model:ir.model.fields,field_description:account_cash_discount_base.field_account_invoice_amount_total_with_discount
 msgid "Total (with discount)"
 msgstr "Total (avec l'escompte)"
@@ -99,7 +106,7 @@ msgid "Total With a"
 msgstr "Total avec"
 
 #. module: account_cash_discount_base
-#: code:addons/account_cash_discount_base/models/account_invoice.py:116
+#: code:addons/account_cash_discount_base/models/account_invoice.py:130
 #, python-format
 msgid "You can't set a discount amount if there is no discount due date. (Invoice ID: %s)"
 msgstr "Vous ne pouvez pas définir un montant d'escompte si il n'y a pas de de date d'échéance d'escompte. (Facture ID: %s)"

@@ -43,6 +43,8 @@ class TestAccountCashDiscountBase(SavepointCase):
             'type_tax_use': 'sale',
         })
 
+        cls.payment_term = cls.env.ref('account.account_payment_term')
+
     def create_simple_invoice(self, amount):
         invoice = self.AccountInvoice.create({
             'partner_id': self.partner_agrolait.id,
@@ -113,3 +115,19 @@ class TestAccountCashDiscountBase(SavepointCase):
         self.assertTrue(invoice.discount_due_date)
 
         invoice.action_invoice_open()
+
+    def test_onchange_payment_term(self):
+        payment_term = self.payment_term
+        payment_term.discount_percent = 5
+        payment_term.discount_delay = 5
+
+        invoice = self.create_simple_invoice(100)
+        invoice.payment_term_id = payment_term
+
+        invoice._onchange_payment_term_discount_options()
+        self.assertEqual(
+            invoice.discount_percent,
+            payment_term.discount_percent)
+        self.assertEqual(
+            invoice.discount_delay,
+            payment_term.discount_delay)

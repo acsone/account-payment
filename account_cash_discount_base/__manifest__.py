@@ -14,8 +14,9 @@
         'account',
     ],
     'data': [
-        'views/res_company.xml',
         'views/account_invoice.xml',
+        'views/account_payment_term.xml',
+        'views/res_company.xml',
         'reports/report_invoice.xml',
     ],
 }
