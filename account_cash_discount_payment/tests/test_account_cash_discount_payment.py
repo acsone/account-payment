@@ -1,90 +1,82 @@
 # -*- coding: utf-8 -*-
-#
-##############################################################################
-#
-#    Authors: Adrien Peiffer
-#    Copyright (c) 2014 Acsone SA/NV (http://www.acsone.eu)
-#
-#    This program is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU Affero General Public License as
-#    published by the Free Software Foundation, either version 3 of the
-#    License, or (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU Affero General Public License for more details.
-#
-#    You should have received a copy of the GNU Affero General Public License
-#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#
-##############################################################################
+# Copyright 2014 ACSONE SA/NV
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-import openerp.tests.common as common
-from openerp import workflow, fields
+from odoo.addons.account_cash_discount_base.tests.common import \
+    TestAccountCashDiscountCommon
+from odoo.fields import Date
 
 
-def create_simple_invoice(self, date):
-    journal_id = self.ref('account.sales_journal')
-    partner_id = self.ref('base.res_partner_4')
-    product_id = self.ref('product.product_product_4')
-    return self.env['account.invoice']\
-        .create({'partner_id': partner_id,
-                 'account_id':
-                 self.ref('account.a_pay'),
-                 'journal_id':
-                 journal_id,
-                 'date_invoice': date,
-                 'discount_due_date': date,
-                 'discount_amount': 1500,
-                 'type': 'in_invoice',
-                 'invoice_line': [(0, 0, {'name': 'test',
-                                          'account_id':
-                                          self.ref('account.a_expense'),
-                                          'price_unit': 2000.00,
-                                          'quantity': 1,
-                                          'product_id': product_id,
-                                          }
-                                   )
-                                  ],
-                 })
+class TestAccountCashDiscountPayment(TestAccountCashDiscountCommon):
 
+    @classmethod
+    def setUpClass(cls):
+        super(TestAccountCashDiscountPayment, cls).setUpClass()
+        cls.PaymentLineCreate = cls.env['account.payment.line.create']
+        cls.PaymentOrder = cls.env['account.payment.order']
 
-class TestAccountCashDiscountBase(common.TransactionCase):
+        cls.payment_mode_out = cls.env.ref(
+            'account_payment_mode.payment_mode_outbound_ct1')
 
-    def setUp(self):
-        super(TestAccountCashDiscountBase, self).setUp()
-        self.context = self.registry("res.users").context_get(self.cr,
-                                                              self.uid)
+    def create_simple_invoice(
+            self, date, payment_mode, amount, discount_percent):
+        invoice = self.AccountInvoice.create({
+            'partner_id': self.partner_agrolait.id,
+            'account_id': self.pay_account.id,
+            'company_id': self.company.id,
+            'journal_id': self.sales_journal.id,
+            'type': 'in_invoice',
+            'date_invoice': date,
+            'discount_due_date': date,
+            'discount_percent': discount_percent,
+            'payment_mode_id': payment_mode.id,
+            'invoice_line_ids': [
+                (0, 0, {
+                    'name': "Test",
+                    'quantity': 1,
+                    'account_id': self.pay_account.id,
+                    'price_unit': amount,
+                })
+            ]
+        })
+        invoice.compute_taxes()
+        return invoice
 
     def test_invoice_payment_discount(self):
-        date = fields.Date.today()
-        invoice = create_simple_invoice(self, date)
-        workflow.trg_validate(self.uid, 'account.invoice', invoice.id,
-                              'invoice_open', self.cr)
-        # Ensure linked move is posted
+        invoice_date = Date.today()
+        invoice = self.create_simple_invoice(
+            invoice_date, self.payment_mode_out, 2000, 25)
+        invoice.action_invoice_open()
+
         move = invoice.move_id
-        move.button_validate()
-        self.assertEqual(move.state, 'posted',
-                         'Journal Entries are not in posted state')
-        payment_order_create_obj = self.env['payment.order.create']
-        account_payment_id = self.ref('account_payment.payment_order_1')
-        payment_order_create = payment_order_create_obj.create(
-            {'cash_discount_date_start': date,
-             'cash_discount_date_end': date,
-             'cash_discount_date': True,
-             'populate_results': True})
-        ctx = self.context.copy()
-        ctx.update({'active_id': account_payment_id})
-        res = payment_order_create.with_context(ctx).search_entries()
-        payment_order_create.entries = res['context']['line_ids']
-        payment_order_create.with_context(ctx).create_payment()
-        account_payment = self.env['payment.order']\
-            .browse([account_payment_id])
-        self.assertEqual(len(account_payment.line_ids.ids), 1,
-                         "Number of line isn't correct")
-        line = account_payment.line_ids[0]
-        self.assertAlmostEqual(line.discount_amount, 500, 2,
-                               "Discount amount isn't correct")
-        self.assertAlmostEqual(line.amount_currency, 1500, 2,
-                               "amount currency isn't correct")
+        move.post()
+
+        payment_order = self.PaymentOrder.create({
+            'payment_mode_id': self.payment_mode_out.id,
+            'payment_type': 'outbound',
+        })
+
+        payment_line_wizard = self.PaymentLineCreate.with_context(
+            active_model=payment_order._name,
+            active_id=payment_order.id,
+        ).create({
+            'cash_discount_date_start': invoice_date,
+            'cash_discount_date_end': invoice_date,
+            'cash_discount_date': True,
+            'journal_ids': [(6, 0, [self.sales_journal.id])],
+        })
+        self.assertEqual(payment_line_wizard.order_id, payment_order)
+
+        payment_line_wizard.populate()
+        move_lines = payment_line_wizard.move_line_ids
+        self.assertEqual(len(move_lines), 1)
+
+        move_line = move_lines[0]
+        self.assertAlmostEqual(move_line.discount_amount, 500, 2)
+
+        payment_line_wizard.create_payment_lines()
+
+        self.assertEqual(len(payment_order.payment_line_ids), 1)
+        move_line = payment_order.payment_line_ids[0]
+        self.assertAlmostEqual(move_line.discount_amount, 500, 2)
+        self.assertAlmostEqual(move_line.amount_currency, 1500, 2)

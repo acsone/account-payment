@@ -42,30 +42,18 @@ class AccountInvoice(models.Model):
         string="Discount Due Date",
         compute='_compute_discount_due_date',
     )
-    force_discount_amount = fields.Boolean(
-        string="Force Discount Amount",
-        states=READONLY_STATES
-    )
-    forced_discount_amount = fields.Monetary(
-        readonly=True,
-        states=READONLY_STATES,
-    )
 
     @api.multi
     @api.depends(
         'amount_total',
         'amount_untaxed',
         'discount_percent',
-        'force_discount_amount',
-        'forced_discount_amount',
         'company_id.cash_discount_base_amount_type',
     )
     def _compute_discount_amount(self):
         for rec in self:
             discount_amount = 0.0
-            if rec.force_discount_amount:
-                discount_amount = rec.forced_discount_amount
-            elif rec.discount_percent != 0.0:
+            if rec.discount_percent != 0.0:
                 base_amount_type = \
                     rec.company_id.cash_discount_base_amount_type
                 base_amount = (

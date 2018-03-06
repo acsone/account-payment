@@ -5,50 +5,17 @@
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
-from odoo.tests.common import SavepointCase
 from odoo.exceptions import UserError
 from odoo.fields import Date
+from .common import TestAccountCashDiscountCommon
 
 
-class TestAccountCashDiscountBase(SavepointCase):
-
-    @classmethod
-    def setUpClass(cls):
-        super(TestAccountCashDiscountBase, cls).setUpClass()
-        cls.Account = cls.env['account.account']
-        cls.AccountInvoice = cls.env['account.invoice']
-        cls.Tax = cls.env['account.tax']
-
-        cls.company = cls.env.ref('base.main_company')
-        cls.partner_agrolait = cls.env.ref('base.res_partner_2')
-
-        cls.recv_account_type = cls.env.ref(
-            'account.data_account_type_receivable')
-        cls.exp_account_type = cls.env.ref(
-            'account.data_account_type_expenses')
-
-        cls.recv_account = cls.Account.search([
-            ('user_type_id', '=', cls.recv_account_type.id)
-        ], limit=1)
-        cls.exp_account = cls.Account.search([
-            ('user_type_id', '=', cls.exp_account_type.id)
-        ], limit=1)
-
-        cls.tax_10_s = cls.Tax.create({
-            'sequence': 30,
-            'name': 'Tax 10.0% (Percentage of Price)',
-            'amount': 10.0,
-            'amount_type': 'percent',
-            'include_base_amount': False,
-            'type_tax_use': 'sale',
-        })
-
-        cls.payment_term = cls.env.ref('account.account_payment_term')
+class TestAccountCashDiscountBase(TestAccountCashDiscountCommon):
 
     def create_simple_invoice(self, amount):
         invoice = self.AccountInvoice.create({
             'partner_id': self.partner_agrolait.id,
-            'account_id': self.exp_account.id,
+            'account_id': self.recv_account.id,
             'company_id': self.company.id,
             'invoice_line_ids': [
                 (0, 0, {

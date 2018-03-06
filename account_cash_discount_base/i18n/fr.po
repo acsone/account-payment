@@ -70,16 +70,6 @@ msgid "Excluding tax"
 msgstr "Prix HT"
 
 #. module: account_cash_discount_base
-#: model:ir.model.fields,field_description:account_cash_discount_base.field_account_invoice_force_discount_amount
-msgid "Force Discount Amount"
-msgstr "Forcer le montant de l'escompte"
-
-#. module: account_cash_discount_base
-#: model:ir.model.fields,field_description:account_cash_discount_base.field_account_invoice_forced_discount_amount
-msgid "Forced discount amount"
-msgstr "Montant de l'escompte (forcé)"
-
-#. module: account_cash_discount_base
 #: code:addons/account_cash_discount_base/models/res_company.py:22
 #, python-format
 msgid "Including all taxes"
