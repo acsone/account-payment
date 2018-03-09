@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 10.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-03-06 08:41+0000\n"
-"PO-Revision-Date: 2018-03-06 08:41+0000\n"
+"POT-Creation-Date: 2018-03-09 07:25+0000\n"
+"PO-Revision-Date: 2018-03-09 07:25+0000\n"
 "Last-Translator: <>\n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -21,8 +21,14 @@ msgid "% discount for payment before"
 msgstr "% d'escompte pour un paiement avant le"
 
 #. module: account_cash_discount_base
+#: model:ir.ui.view,arch_db:account_cash_discount_base.res_company_form_view
+msgid "Base Amount Type"
+msgstr "Montant de base"
+
+#. module: account_cash_discount_base
 #: model:ir.ui.view,arch_db:account_cash_discount_base.invoice_form_inherit
 #: model:ir.ui.view,arch_db:account_cash_discount_base.invoice_supplier_form_inherit
+#: model:ir.ui.view,arch_db:account_cash_discount_base.res_company_form_view
 msgid "Cash Discount"
 msgstr "Escompte"
 
@@ -43,11 +49,6 @@ msgid "Discount (%)"
 msgstr "Remise (%)"
 
 #. module: account_cash_discount_base
-#: model:ir.model.fields,field_description:account_cash_discount_base.field_account_invoice_discount_amount
-msgid "Discount Amount"
-msgstr "Montant de l'escompte"
-
-#. module: account_cash_discount_base
 #: model:ir.model.fields,field_description:account_cash_discount_base.field_account_invoice_discount_delay
 #: model:ir.model.fields,field_description:account_cash_discount_base.field_account_payment_term_discount_delay
 msgid "Discount Delay (days)"
@@ -57,6 +58,11 @@ msgstr "Délai de l'escompte (jours)"
 #: model:ir.model.fields,field_description:account_cash_discount_base.field_account_invoice_discount_due_date_readonly
 msgid "Discount Due Date"
 msgstr "Date d'échéance de l'escompte"
+
+#. module: account_cash_discount_base
+#: model:ir.model.fields,field_description:account_cash_discount_base.field_account_invoice_discount_amount
+msgid "Discount amount"
+msgstr "Montant de l'escompte"
 
 #. module: account_cash_discount_base
 #: model:ir.model.fields,field_description:account_cash_discount_base.field_account_invoice_discount_due_date
@@ -96,7 +102,7 @@ msgid "Total With a"
 msgstr "Total avec"
 
 #. module: account_cash_discount_base
-#: code:addons/account_cash_discount_base/models/account_invoice.py:130
+#: code:addons/account_cash_discount_base/models/account_invoice.py:115
 #, python-format
 msgid "You can't set a discount amount if there is no discount due date. (Invoice ID: %s)"
 msgstr "Vous ne pouvez pas définir un montant d'escompte si il n'y a pas de de date d'échéance d'escompte. (Facture ID: %s)"

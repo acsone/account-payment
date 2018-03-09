@@ -12,13 +12,12 @@ from the delay. The amount with discount deducted is computed at the same time
 as taxes. This module also adds cash discount informations on customer invoice
 report.
 
-On supplier invoices, you can set the discount percent or directly defined the
-total amount with discount deducted. For the discount due date, you can fill it
-directly or set a delay. In this case, discount due date is still computed at
-invoice's validation.
+On supplier invoices, you can set the discount percent. For the discount due
+date, you can fill it directly or set a delay. In this case, discount due date
+is still computed at invoice's validation.
 
-In all cases, the discount is a percentage of the  untaxed amount.
-
+You can decide to calculate the discount amount based on the total price taxes
+included or not.
 
 
 Installation
@@ -27,6 +26,22 @@ Installation
 To install this module, you need to:
 
  * Click on install button
+
+
+Configuration
+=============
+
+To configure the base amount type, you need to:
+
+#. Go to your companies
+#. Set the cash discount base amount type (including taxes or not)
+
+You can also configure default discount percent and delay on the payment term.
+
+.. figure:: path/to/local/image.png
+   :alt: alternative description
+   :width: 600 px
+
 
 Usage
 =====

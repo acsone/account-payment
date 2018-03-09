@@ -10,9 +10,12 @@
         <field name="inherit_id" ref="base.view_company_form"/>
         <field name="arch" type="xml">
 
-            <field name="currency_id" position="after">
-                <field name="cash_discount_base_amount_type"/>
-            </field>
+
+            <xpath expr="//field[@name='partner_id']/parent::group/parent::group" position="inside">
+                <group name="cash_discount" string="Cash Discount">
+                    <field name="cash_discount_base_amount_type" string="Base Amount Type"/>
+                </group>
+            </xpath>
 
         </field>
     </record>

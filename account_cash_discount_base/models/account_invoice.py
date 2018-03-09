@@ -26,7 +26,6 @@ class AccountInvoice(models.Model):
         compute='_compute_amount_total_with_discount',
     )
     discount_amount = fields.Monetary(
-        string="Discount Amount",
         compute='_compute_discount_amount',
     )
     discount_delay = fields.Integer(

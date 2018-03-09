@@ -23,7 +23,7 @@ class TestAccountCashDiscountBase(TestAccountCashDiscountCommon):
                     'quantity': 1,
                     'account_id': self.exp_account.id,
                     'price_unit': amount,
-                    'invoice_line_tax_ids': [(6, 0, [self.tax_10_s.id])],
+                    'invoice_line_tax_ids': [(6, 0, [self.tax_10_p.id])],
                 })
             ]
         })
