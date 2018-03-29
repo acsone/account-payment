@@ -42,24 +42,31 @@ class PaymentLine(models.Model):
         supplier_account_amount = invoice.discount_amount
         discount_amount_credit = supplier_account_amount
 
-        lines_values = list()
-        lines_values.append({
+        lines_values = [{
             'partner_id': partner.id,
             'name': move_line_name,
             'debit': supplier_account_amount,
             'account_id': move_line.account_id.id,
-        })
+        }]
 
         if tax_adjustment:
-            for tax_line in invoice.tax_line_ids:
-                amount = tax_line.amount * invoice.discount_percent / 100.0
+            tax_move_lines = self.env['account.move.line'].search([
+                ('move_id', '=', move_line.move_id.id),
+                ('tax_line_id', '!=', False)
+            ])
+
+            for tax_move_line in tax_move_lines:
+                amount = (
+                    abs(tax_move_line.balance) *
+                    invoice.discount_percent / 100.0
+                )
                 discount_amount_credit -= amount
                 lines_values.append({
                     'partner_id': partner.id,
                     'name': move_line_name,
                     'credit': amount,
-                    'account_id': tax_line.account_id.id,
-                    'tax_line_id': tax_line.tax_id.id,
+                    'account_id': tax_move_line.account_id.id,
+                    'tax_line_id': tax_move_line.tax_line_id.id,
                 })
 
         lines_values.append({

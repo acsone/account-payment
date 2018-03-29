@@ -99,7 +99,7 @@ class AccountInvoice(models.Model):
 
     @api.multi
     @api.onchange(
-        'has_discount_amount',
+        'has_discount',
         'discount_amount',
         'discount_delay',
     )
