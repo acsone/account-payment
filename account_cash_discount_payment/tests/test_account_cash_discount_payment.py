@@ -44,11 +44,24 @@ class TestAccountCashDiscountPayment(TestAccountCashDiscountPaymentCommon):
         payment_line_wizard.create_payment_lines()
 
         self.assertEqual(len(payment_order.payment_line_ids), 1)
-        move_line = payment_order.payment_line_ids[0]
-        self.assertTrue(move_line.pay_with_discount)
-        self.assertAlmostEqual(move_line.discount_amount, 500, 2)
-        self.assertAlmostEqual(move_line.amount_currency, 1500, 2)
+        payment_line = payment_order.payment_line_ids[0]
+        self.assertTrue(payment_line.pay_with_discount)
 
         # Check pay_with_discount_constraint
         with self.assertRaises(ValidationError), self.env.cr.savepoint():
             payment_line.move_line_id = False
+
+        # Change pay_with_discount and check if discount amount is coherent
+        # with the invoice
+        payment_line.pay_with_discount = False
+        payment_line._onchange_pay_with_discount()
+        self.assertEqual(payment_line.amount_currency, invoice.amount_total)
+
+        payment_line.pay_with_discount = True
+        payment_line._onchange_pay_with_discount()
+        self.assertEqual(
+            payment_line.amount_currency,
+            invoice.amount_total - invoice.discount_amount)
+
+        self.assertAlmostEqual(payment_line.discount_amount, 500, 2)
+        self.assertAlmostEqual(payment_line.amount_currency, 1500, 2)
