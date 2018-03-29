@@ -40,5 +40,6 @@ class AccountPaymentOrder(models.Model):
         self.ensure_one()
         move_values = payment_line.get_cash_discount_writeoff_move_values()
         move = self.env['account.move'].create(move_values)
-        move.post()
+        if self.payment_mode_id.post_move:
+            move.post()
         return move
