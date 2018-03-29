@@ -11,7 +11,7 @@ class PaymentLine(models.Model):
     _inherit = 'account.payment.line'
 
     @api.multi
-    def check_cash_discount_write_off_creation(self):
+    def _check_cash_discount_write_off_creation(self):
         self.ensure_one()
         move_line = self.move_line_id
         has_partial_reconciliation = (
