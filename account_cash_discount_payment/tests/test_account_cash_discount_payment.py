@@ -3,6 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo.fields import Date
+from odoo.exceptions import ValidationError
 from .common import TestAccountCashDiscountPaymentCommon
 
 
@@ -47,3 +48,7 @@ class TestAccountCashDiscountPayment(TestAccountCashDiscountPaymentCommon):
         self.assertTrue(move_line.pay_with_discount)
         self.assertAlmostEqual(move_line.discount_amount, 500, 2)
         self.assertAlmostEqual(move_line.amount_currency, 1500, 2)
+
+        # Check pay_with_discount_constraint
+        with self.assertRaises(ValidationError), self.env.cr.savepoint():
+            payment_line.move_line_id = False
