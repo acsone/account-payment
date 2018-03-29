@@ -27,8 +27,7 @@ class TestAccountCashDiscountPayment(TestAccountCashDiscountPaymentCommon):
             active_model=payment_order._name,
             active_id=payment_order.id,
         ).create({
-            'cash_discount_date_start': invoice_date,
-            'cash_discount_date_end': invoice_date,
+            'cash_discount_date': invoice_date,
             'date_type': 'discount_due_date',
             'journal_ids': [(6, 0, [self.purchase_journal.id])],
         })

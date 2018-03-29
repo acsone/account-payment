@@ -46,8 +46,7 @@ class TestAccountCashDiscountWriteOff(TestAccountCashDiscountPaymentCommon):
             active_model=payment_order._name,
             active_id=payment_order.id,
         ).create({
-            'cash_discount_date_start': discount_due_date,
-            'cash_discount_date_end': discount_due_date,
+            'cash_discount_date': discount_due_date,
             'date_type': 'discount_due_date',
             'journal_ids': [(6, 0, [self.purchase_journal.id])],
         })
@@ -124,8 +123,7 @@ class TestAccountCashDiscountWriteOff(TestAccountCashDiscountPaymentCommon):
             active_model=payment_order._name,
             active_id=payment_order.id,
         ).create({
-            'cash_discount_date_start': discount_due_date,
-            'cash_discount_date_end': discount_due_date,
+            'cash_discount_date': discount_due_date,
             'date_type': 'discount_due_date',
             'journal_ids': [(6, 0, [self.purchase_journal.id])],
         })
