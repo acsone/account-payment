@@ -20,7 +20,6 @@ class PaymentLine(models.Model):
         self.ensure_one()
         move_line = self.move_line_id
         partner = move_line.partner_id
-        partner = partner._find_accounting_partner(partner)
         invoice = move_line.invoice_id
         company = invoice.company_id
         tax_adjustment = company.cash_discount_use_tax_adjustment
