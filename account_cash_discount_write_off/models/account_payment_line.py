@@ -31,7 +31,7 @@ class PaymentLine(models.Model):
         partner = partner._find_accounting_partner(partner)
         invoice = move_line.invoice_id
         company = invoice.company_id
-        tax_adjustment = company.cash_discount_base_amount_type == 'total'
+        tax_adjustment = company.cash_discount_use_tax_adjustment
 
         woff_account = False
         woff_journal = False
