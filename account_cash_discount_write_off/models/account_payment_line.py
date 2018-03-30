@@ -64,7 +64,8 @@ class PaymentLine(models.Model):
                 lines_values.append({
                     'partner_id': partner.id,
                     'name': move_line_name,
-                    'credit': amount,
+                    'debit': tax_move_line.credit > 0 and amount or 0.0,
+                    'credit': tax_move_line.debit > 0 and amount or 0.0,
                     'account_id': tax_move_line.account_id.id,
                     'tax_line_id': tax_move_line.tax_line_id.id,
                 })
