@@ -28,10 +28,8 @@ class AccountMoveLine(models.Model):
         if invoice and invoice.discount_due_date and invoice.has_discount:
             today = fields.Date.today()
             discount_amount = invoice.discount_amount
-            amount_currency = abs(self.amount_residual) - discount_amount
-            values.update({
-                'pay_with_discount': invoice.discount_due_date >= today,
-                'amount_currency': amount_currency,
-                'discount_amount': discount_amount,
-            })
+            pay_with_discount = invoice.discount_due_date >= today
+            values['pay_with_discount'] = pay_with_discount
+            if pay_with_discount:
+                values['amount_currency'] -= discount_amount
         return values
