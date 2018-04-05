@@ -13,6 +13,9 @@ class PaymentLine(models.Model):
     pay_with_discount = fields.Boolean(
         default=False,
     )
+    pay_with_discount_allowed = fields.Boolean(
+        compute='_compute_pay_with_discount_allowed',
+    )
     discount_due_date = fields.Date(
         related='move_line_id.invoice_id.discount_due_date',
         readonly=True,
@@ -23,6 +26,15 @@ class PaymentLine(models.Model):
     )
 
     @api.multi
+    def _compute_pay_with_discount_allowed(self):
+        for rec in self:
+            rec.pay_with_discount_allowed = (
+                rec.move_line_id and
+                rec.move_line_id.invoice_id and
+                rec.move_line_id.invoice_id.has_discount
+            )
+
+    @api.multi
     @api.constrains(
         'pay_with_discount',
         'move_line_id',
@@ -31,9 +43,7 @@ class PaymentLine(models.Model):
         for rec in self:
             if not rec.pay_with_discount:
                 continue
-            move_line = rec.move_line_id
-            invoice = move_line and move_line.invoice_id or False
-            if not invoice or not invoice.has_discount:
+            if not rec.pay_with_discount_allowed:
                 raise ValidationError(
                     _("You can't pay with a discount if the payment line is "
                       "not linked to an invoice which has a discount."))
@@ -58,3 +68,9 @@ class PaymentLine(models.Model):
             self.amount_currency = invoice.amount_total_with_discount
         else:
             self.amount_currency = invoice.amount_total
+
+    @api.multi
+    def toggle_pay_with_discount(self):
+        self.ensure_one()
+        self.pay_with_discount = not self.pay_with_discount
+        self._onchange_pay_with_discount()
