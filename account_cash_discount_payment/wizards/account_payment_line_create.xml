@@ -15,6 +15,11 @@
                        attrs="{'invisible': [('date_type', '!=', 'discount_due_date')], 'required': [('date_type', '=', 'discount_due_date')]}"/>
             </field>
 
+            <xpath expr="//field[@name='move_line_ids']/tree/field[@name='company_currency_id']" position="after">
+                <field name="discount_due_date"/>
+                <field name="discount_amount"/>
+            </xpath>
+
         </field>
     </record>
 
