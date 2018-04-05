@@ -42,17 +42,21 @@ class PaymentLine(models.Model):
         supplier_account_amount = invoice.discount_amount
         discount_amount_credit = supplier_account_amount
 
-        lines_values = [{
+        lines_values = []
+
+        lines_values.append({
             'partner_id': partner.id,
             'name': move_line_name,
             'debit': supplier_account_amount,
             'account_id': move_line.account_id.id,
-        }]
+        })
 
         if tax_adjustment:
             tax_move_lines = self.env['account.move.line'].search([
                 ('move_id', '=', move_line.move_id.id),
-                ('tax_line_id', '!=', False)
+                '|',
+                ('tax_line_id', '!=', False),
+                ('tax_ids', '!=', False)
             ])
 
             for tax_move_line in tax_move_lines:
@@ -68,14 +72,16 @@ class PaymentLine(models.Model):
                     'credit': tax_move_line.debit > 0 and amount or 0.0,
                     'account_id': tax_move_line.account_id.id,
                     'tax_line_id': tax_move_line.tax_line_id.id,
+                    'tax_ids': [(6, 0, tax_move_line.tax_ids.ids)]
                 })
 
-        lines_values.append({
-            'partner_id': partner.id,
-            'name': move_line_name,
-            'credit': discount_amount_credit,
-            'account_id': woff_account.id,
-        })
+        if discount_amount_credit > 0:
+            lines_values.append({
+                'partner_id': partner.id,
+                'name': move_line_name,
+                'credit': discount_amount_credit,
+                'account_id': woff_account.id,
+            })
 
         move_values = {
             'journal_id': woff_journal.id,
