@@ -3,7 +3,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo import api, models, fields, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 class PaymentLine(models.Model):
@@ -15,6 +15,9 @@ class PaymentLine(models.Model):
     )
     pay_with_discount_allowed = fields.Boolean(
         compute='_compute_pay_with_discount_allowed',
+    )
+    toggle_pay_with_discount_allowed = fields.Boolean(
+        compute='_compute_toggle_pay_with_discount_allowed',
     )
     discount_due_date = fields.Date(
         related='move_line_id.invoice_id.discount_due_date',
@@ -32,6 +35,14 @@ class PaymentLine(models.Model):
                 rec.move_line_id and
                 rec.move_line_id.invoice_id and
                 rec.move_line_id.invoice_id.has_discount
+            )
+
+    @api.multi
+    def _compute_toggle_pay_with_discount_allowed(self):
+        for rec in self:
+            rec.toggle_pay_with_discount_allowed = (
+                rec.pay_with_discount_allowed and
+                rec.order_id.state not in ('uploaded', 'cancelled')
             )
 
     @api.multi
@@ -70,7 +81,19 @@ class PaymentLine(models.Model):
             self.amount_currency = invoice.amount_total
 
     @api.multi
+    def _check_toggle_pay_with_discount_allowed(self):
+        for rec in self:
+            if not rec.toggle_pay_with_discount_allowed:
+                raise UserError(
+                    _("You can change the pay with discount value only if "
+                      "there is a linked invoice with a discount and if the "
+                      "payment order is not done. (Payment Order: %s)") % (
+                        rec.order_id.name)
+                )
+
+    @api.multi
     def toggle_pay_with_discount(self):
         self.ensure_one()
+        self._check_toggle_pay_with_discount_allowed()
         self.pay_with_discount = not self.pay_with_discount
         self._onchange_pay_with_discount()
