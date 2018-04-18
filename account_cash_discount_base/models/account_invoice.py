@@ -94,7 +94,8 @@ class AccountInvoice(models.Model):
         for rec in self:
             rec.has_discount = (
                 rec.discount_amount != 0 and
-                rec.discount_due_date != 0
+                rec.discount_due_date != 0 and
+                rec.type == 'in_invoice'
             )
 
     @api.multi
@@ -107,7 +108,12 @@ class AccountInvoice(models.Model):
     def _onchange_discount_delay(self):
         date_today = datetime.today()
         for rec in self:
-            if rec.discount_amount == 0 or rec.discount_delay == 0:
+            skip = (
+                rec.discount_amount == 0 or
+                rec.discount_delay == 0 or
+                rec.type != 'in_invoice'
+            )
+            if skip:
                 continue
             if rec.date_invoice:
                 date_invoice = fields.Date.from_string(rec.date_invoice)
@@ -122,7 +128,7 @@ class AccountInvoice(models.Model):
     )
     def _onchange_payment_term_discount_options(self):
         payment_term = self.payment_term_id
-        if payment_term and self.type in ('in_invoice', 'out_invoice'):
+        if payment_term and self.type == 'in_invoice':
             self.discount_percent = payment_term.discount_percent
             self.discount_delay = payment_term.discount_delay
 

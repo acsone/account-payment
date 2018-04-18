@@ -4,6 +4,7 @@
 
 from odoo import api, models, _
 from odoo.exceptions import UserError
+from odoo.tools import float_compare
 
 
 class PaymentLine(models.Model):
@@ -13,7 +14,14 @@ class PaymentLine(models.Model):
     @api.multi
     def _check_cash_discount_write_off_creation(self):
         self.ensure_one()
-        return self.pay_with_discount
+        return (
+            self.pay_with_discount and
+            self.pay_with_discount_allowed and
+            float_compare(
+                self.amount_currency,
+                self.move_line_id.invoice_id.amount_total_with_discount,
+                precision_rounding=self.currency_id.rounding) == 0
+        )
 
     @api.multi
     def get_cash_discount_writeoff_move_values(self):

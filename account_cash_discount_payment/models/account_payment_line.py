@@ -4,6 +4,7 @@
 
 from odoo import api, models, fields, _
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_compare
 
 
 class PaymentLine(models.Model):
@@ -75,10 +76,44 @@ class PaymentLine(models.Model):
         """
         self._check_pay_with_discount()
         invoice = self.move_line_id.invoice_id
+        currency = self.currency_id
+        # When pay_with_discount is changed to False, we do not want to lose
+        # the amount if the user changed it manually (related to the
+        # _onchange_amount_with_discount which enable or disable the value
+        # depending on the amount)
+        change_base_amount = float_compare(
+            self.amount_currency, invoice.amount_total_with_discount,
+            precision_rounding=currency.rounding) == 0
         if self.pay_with_discount:
             self.amount_currency = invoice.amount_total_with_discount
-        else:
+        elif change_base_amount:
             self.amount_currency = invoice.amount_total
+
+    @api.onchange(
+        'amount_currency',
+    )
+    def _onchange_amount_with_discount(self):
+        """
+        This method will disable the pay_with_discount flag if the amount has
+        been changed and if it doesn't equal to the invoice total amount with
+        discount.
+        """
+        if not self.pay_with_discount_allowed or not self.pay_with_discount:
+            return
+        invoice = self.move_line_id.invoice_id
+        currency = self.currency_id
+        can_pay_with_discount = float_compare(
+            self.amount_currency, invoice.amount_total_with_discount,
+            precision_rounding=currency.rounding) == 0
+        if not can_pay_with_discount:
+            self.pay_with_discount = False
+            return {
+                'warning': {
+                    'title': _("Warning!"),
+                    'message': _("You can't pay with a discount if "
+                                 "you don't pay all the invoice at once.")
+                }
+            }
 
     @api.multi
     def _check_toggle_pay_with_discount_allowed(self):
@@ -88,7 +123,7 @@ class PaymentLine(models.Model):
                     _("You can change the pay with discount value only if "
                       "there is a linked invoice with a discount and if the "
                       "payment order is not done. (Payment Order: %s)") % (
-                        rec.order_id.name)
+                          rec.order_id.name)
                 )
 
     @api.multi
