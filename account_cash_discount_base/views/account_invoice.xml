@@ -11,7 +11,8 @@
         <field name="arch" type="xml">
 
             <xpath expr="//field[@name='journal_id']/parent::group/parent::group" position="inside">
-                <group string="Cash Discount" name="cash_discount">
+                <group string="Cash Discount" name="cash_discount"
+                       attrs="{'invisible': [('type', '!=', 'in_invoice')]}">
                     <field name="discount_percent"/>
                     <field name="discount_amount"/>
                     <field name="amount_total_with_discount"/>
