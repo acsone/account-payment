@@ -16,7 +16,9 @@ class PaymentLine(models.Model):
         self.ensure_one()
         return (
             self.pay_with_discount and
-            self.pay_with_discount_allowed and
+            self.move_line_id and
+            self.move_line_id.invoice_id and
+            self.move_line_id.invoice_id.has_discount and
             float_compare(
                 self.amount_currency,
                 self.move_line_id.invoice_id.amount_total_with_discount,

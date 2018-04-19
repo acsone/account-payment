@@ -31,12 +31,24 @@ class PaymentLine(models.Model):
 
     @api.multi
     def _compute_pay_with_discount_allowed(self):
+        """
+        Discount can be used only when the invoice has not already
+        been paid partially
+        """
         for rec in self:
-            rec.pay_with_discount_allowed = (
-                rec.move_line_id and
-                rec.move_line_id.invoice_id and
-                rec.move_line_id.invoice_id.has_discount
-            )
+            allowed = False
+            move_line = rec.move_line_id
+            if move_line and move_line.invoice_id:
+                invoice = move_line.invoice_id
+                currency = invoice.currency_id
+                allowed = (
+                    invoice.has_discount and
+                    float_compare(
+                        invoice.residual, invoice.amount_total,
+                        precision_rounding=currency.rounding,
+                    ) == 0
+                )
+            rec.pay_with_discount_allowed = allowed
 
     @api.multi
     def _compute_toggle_pay_with_discount_allowed(self):
