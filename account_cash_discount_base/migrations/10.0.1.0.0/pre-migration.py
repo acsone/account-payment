@@ -10,3 +10,12 @@ def migrate(cr, version):
         ('account_cash_discount_payment_term', 'account_cash_discount_base'),
     ]
     openupgrade.update_module_names(cr, modules, merge_modules=True)
+    # recompute fields
+    cr.execute(
+        """
+        ALTER TABLE account_invoice
+            DROP COLUMN IF EXISTS discount_amount;
+        ALTER TABLE account_invoice
+            DROP COLUMN IF EXISTS amount_total_with_discount;
+        """
+    )
