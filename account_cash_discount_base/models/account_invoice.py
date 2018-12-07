@@ -196,3 +196,31 @@ class AccountInvoice(models.Model):
                     "discount due date. (Invoice ID: %s)"
                 ) % (inv.id,))
         return res
+
+    @api.model
+    def _prepare_refund(
+            self, invoice, date_invoice=None, date=None, description=None,
+            journal_id=None):
+        values = super(AccountInvoice, self)._prepare_refund(
+            invoice,
+            date_invoice=date_invoice, date=date,
+            description=description, journal_id=journal_id
+        )
+
+        partner_id = values.get('partner_id')
+        if invoice.type in DISCOUNT_ALLOWED_TYPES and partner_id:
+            partner = self.env['res.partner'].browse(partner_id)
+            payment_term = partner.property_supplier_payment_term_id
+            values['payment_term_id'] = payment_term.id
+        return values
+
+    @api.multi
+    @api.returns('self')
+    def refund(self, date_invoice=None, date=None, description=None, journal_id=None):
+        invoice = super(AccountInvoice, self).refund(
+            date_invoice=date_invoice, date=date, description=description,
+            journal_id=journal_id
+        )
+        invoice._onchange_payment_term_discount_options()
+        invoice._onchange_discount_delay()
+        return invoice
