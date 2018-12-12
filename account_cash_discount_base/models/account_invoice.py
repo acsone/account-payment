@@ -41,7 +41,7 @@ class AccountInvoice(models.Model):
     )
     real_discount_amount = fields.Monetary(
         compute='_compute_real_discount_amount',
-        string="Discount amount (minus related refunds amount",
+        string="Discount amount (minus related refunds amount)",
     )
     refunds_discount_amount = fields.Monetary(
         compute='_compute_refunds_discount_amount',
