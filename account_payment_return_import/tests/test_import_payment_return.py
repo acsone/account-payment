@@ -12,6 +12,7 @@ class TestAccountPaymentReturnImport(TransactionCase):
         self.company = self.env.ref('base.main_company')
         self.acc_number = 'NL77ABNA0574908765'
         self.acc_bank = self.env['res.partner.bank'].create({
+            'partner_id': self.env.ref('base.res_partner_1').id,
             'state': 'iban',
             'acc_number': self.acc_number,
             'bank_name': 'TEST BANK',
