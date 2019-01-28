@@ -35,6 +35,9 @@ env:
 
 
 install:
+  #  FIXME: remove this after merge
+  - git clone --branch 12.0-mig_account_payment_return_tbi https://github.com/acsone/account-payment.git PR214
+  - rm -rf account_payment_return && cp -ar PR214/account_payment_return .
   - git clone https://github.com/OCA/maintainer-quality-tools.git ${HOME}/maintainer-quality-tools
   - export PATH=${HOME}/maintainer-quality-tools/travis:${PATH}
   - travis_install_nightly
