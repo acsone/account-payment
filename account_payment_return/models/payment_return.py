@@ -230,6 +230,8 @@ class PaymentReturn(models.Model):
                 returned_moves.mapped('invoice_id')._payment_returned(
                     return_line
                 )
+                if return_line.reason_id.block_move_lines:
+                    returned_moves.write({"blocked": True})
                 all_move_lines |= move_line
                 move_line.remove_move_reconcile()
                 (move_line | move_line2).reconcile()
