@@ -228,6 +228,8 @@ class PaymentReturn(models.Model):
                 # returned_moves: debit on customer account (from invoice move)
                 returned_moves = move_line.matched_debit_ids.mapped(
                     'debit_move_id')
+                if return_line.reason_id.block_move_lines:
+                    returned_moves.write({"blocked": True})
                 all_move_lines |= move_line
                 invoices |= returned_moves.mapped('invoice_id')
                 move_line.remove_move_reconcile()
