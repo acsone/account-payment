@@ -10,7 +10,9 @@ RE_CAMT = re.compile(
 )
 RE_CAMT_VERSION = re.compile(
     r'(^urn:iso:std:iso:20022:tech:xsd:camt.054.001.02'
-    r'|^ISO:camt.054.001.02)'
+    r'|^ISO:camt.054.001.02'
+    r'|^urn:iso:std:iso:20022:tech:xsd:camt.053.001.02'
+    r'|^ISO:camt.053.001.02)'
 )
 
 
@@ -24,7 +26,8 @@ class CamtParser(object):
             return 0.0
         amount = 0.0
         amount_node = node.xpath(
-            './ns:AmtDtls/ns:InstdAmt/ns:Amt', namespaces={'ns': ns})
+            './ns:AmtDtls/ns:InstdAmt/ns:Amt | ./ns:AmtDtls/ns:TxAmt/ns:Amt',
+            namespaces={'ns': ns})
         if amount_node:
             amount = float(amount_node[0].text)
         return amount
@@ -105,7 +108,7 @@ class CamtParser(object):
         return_date = self.parse_date(ns, node)
         payment_returns = []
         notification_nodes = node.xpath(
-            './ns:Ntfctn', namespaces={'ns': ns})
+            './ns:Ntfctn | ./ns:Stmt', namespaces={'ns': ns})
         for notification_node in notification_nodes:
             entry_nodes = notification_node.xpath(
                 './ns:Ntry', namespaces={'ns': ns})
@@ -113,7 +116,14 @@ class CamtParser(object):
                 payment_return = {}
                 self.add_value_from_node(
                     ns, notification_node, './ns:Id', payment_return, 'name')
-                payment_return['date'] = return_date
+                self.add_value_from_node(
+                    ns, notification_node, './ns:ValDt/ns:Dt',
+                    payment_return, 'date')
+                if payment_return.get('date'):
+                    entry_date = payment_return['date']
+                else:
+                    entry_date = return_date
+                    payment_return['date'] = entry_date
                 self.add_value_from_node(
                     ns, notification_node, './ns:Acct/ns:Id/ns:IBAN',
                     payment_return, 'account_number')
@@ -123,6 +133,8 @@ class CamtParser(object):
                 payment_return['transactions'].extend(transactions)
                 subno = 0
                 for transaction in payment_return['transactions']:
+                    if not transaction.get('date'):
+                        transaction['date'] = entry_date
                     subno += 1
                     transaction['unique_import_id'] = \
                         "{return_name}{entry_subno}{transaction_subno}".format(
@@ -135,7 +147,7 @@ class CamtParser(object):
 
     def check_version(self, ns, root):
         """
-        Check whether the validity of the camt.054.001.02 file.
+        Check whether the validity of the camt file.
         :raise: ValueError if not valid
         """
         # Check whether it's a CAMT Bank to Customer Debit Credit Notification
@@ -151,7 +163,7 @@ class CamtParser(object):
 
     def parse(self, data):
         """
-        Parse a camt.054.001.02 file.
+        Parse camt.054.001.02 file and camt.053 .001.02 files.
         :param data:
         :return: account.payment.return records list
         :raise: ValueError if parsing failed

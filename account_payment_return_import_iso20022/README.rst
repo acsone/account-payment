@@ -25,7 +25,7 @@ Account Payment Return Import Iso20022
 
 |badge1| |badge2| |badge3| |badge4| |badge5| 
 
-Module to import payment returns from pain.002.001.03 and camt.054.001.02 files.
+Module to import payment returns from pain.002.001.03, camt.053.001.02 and camt.054.001.02 files.
 
 **Table of contents**
 
@@ -65,6 +65,7 @@ Contributors
 * David Vidal <david.vidal@tecnativa.com>
 * Luis M. Ontalba <luis.martinez@tecnativa.com>
 * Thomas Binsfeld <thomas.binsfeld@acsone.eu>
+* Souheil Bejaoui <souheil.bejaoui@acsone.eu>
 
 Maintainers
 ~~~~~~~~~~~
