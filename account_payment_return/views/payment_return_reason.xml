@@ -26,6 +26,16 @@
         </field>
     </record>
 
+    <record model="ir.ui.view" id="payment_return_reason_search_view">
+        <field name="model">payment.return.reason</field>
+        <field name="type">search</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" filter_domain="['|', ('code', 'ilike', self), ('name', 'ilike', self)]"/>
+            </search>
+        </field>
+    </record>
+
     <record model="ir.actions.act_window" id="payment_return_reason_action">
         <field name="name">Payment Return Reasons</field>
         <field name="res_model">payment.return.reason</field>
