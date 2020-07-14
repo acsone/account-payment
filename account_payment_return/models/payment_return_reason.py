@@ -15,6 +15,11 @@ class PaymentReturnReason(models.Model):
         help="Check 'No Follow-up' on journal items that used to be "
              "reconciled with a payment returned with this code.",
     )
+    next_action_type_id = fields.Many2one(
+        comodel_name="payment.return.reason.action.type",
+        string="Next Action",
+        company_dependent=True,
+    )
 
     @api.model
     def name_search(self, name, args=None, operator='ilike', limit=100):
