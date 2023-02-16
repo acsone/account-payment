@@ -1,0 +1,2 @@
+
+odoo16-addon-account_payment_order @git+https://github.com/OCA/bank-payment/pull/1036/head#subdirectory=setup/account_payment_order
