@@ -88,6 +88,8 @@ class PaymentLine(models.Model):
         if self.pay_with_discount:
             # apply discount
             self.amount_currency = amount_with_discount
+            #update discount_amount_currency on aml
+            self.move_line_id.discount_amount_currency = amount_with_discount
         elif change_base_amount:
             if self.currency_id:
                 amount_currency = invoice_line.amount_residual_currency

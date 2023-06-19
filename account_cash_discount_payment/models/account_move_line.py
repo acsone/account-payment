@@ -30,4 +30,6 @@ class AccountMoveLine(models.Model):
                 amount_with_discount *= 1 - (self.discount_percentage / 100)
 
                 values["amount_currency"] = amount_with_discount
+                #update discount_amount_currency on aml
+                self.discount_amount_currency = amount_with_discount
         return values
