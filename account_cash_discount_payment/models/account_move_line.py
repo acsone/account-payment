@@ -3,13 +3,41 @@
 
 from odoo import fields, models
 
+DISCOUNT_ALLOWED_TYPES = (
+    "in_invoice",
+    "in_refund",
+    "out_invoice",
+)
+
+
+class AccountMoveReversal(models.TransientModel):
+    """
+    Account move reversal wizard, it cancel an account move by reversing it.
+    """
+
+    _inherit = "account.move.reversal"
+
+    def _prepare_default_reversal(self, move):
+        res = super()._prepare_default_reversal(move)
+        res["invoice_payment_term_id"] = move.invoice_payment_term_id.id
+        return res
+
 
 class AccountMoveLine(models.Model):
 
     _inherit = "account.move.line"
 
-    def _get_discount_amount(self, base_amount):
-        return base_amount * (self.discount_percentage / 100)
+    origin_discount_amount_currency = fields.Monetary(
+        string="Original Discount amount in Currency",
+        currency_field="currency_id",
+    )
+
+    origin_discount_balance = fields.Monetary(
+        string="Original Discount Balance",
+        currency_field="company_currency_id",
+    )
+
+    discount_updated = fields.Boolean()
 
     def _prepare_payment_line_vals(self, payment_order):
         self.ensure_one()
@@ -27,30 +55,31 @@ class AccountMoveLine(models.Model):
                 else:
                     amount_residual = self.amount_residual
 
-                if self.company_id.early_pay_discount_computation in (
-                    "excluded",
-                    "mixed",
-                ):
-                    base_amount = amount_residual / (
-                        (
-                            self.move_id.amount_tax_signed
-                            + self.move_id.amount_untaxed_signed
-                        )
-                        / self.move_id.amount_untaxed_signed
-                    )
-                else:
-                    base_amount = amount_residual
-
                 if self.move_id.is_invoice():
-                    base_amount *= -1
                     amount_residual *= -1
                 # apply discount
-                discount = self._get_discount_amount(base_amount)
-                amount_with_discount = amount_residual - discount
+                discount_amount_currency = (
+                    self.discount_amount_currency
+                    if not self.discount_updated
+                    else self.origin_discount_amount_currency
+                )
+                discount = abs(self.amount_currency) - abs(discount_amount_currency)
+                refund_discount_amount = self.move_id._get_refunds_amount_total()[
+                    "discount"
+                ]
+                amount_with_discount = (
+                    amount_residual - discount + refund_discount_amount
+                )
                 values["amount_currency"] = amount_with_discount
                 # update discount_amount_currency on aml
+                if not self.discount_updated:
+                    self.discount_updated = True
+                    self.origin_discount_amount_currency = self.discount_amount_currency
+                    self.origin_discount_balance = self.discount_balance
                 self.discount_amount_currency = (
-                    self.move_id.amount_total_in_currency_signed + discount
+                    self.origin_discount_amount_currency - refund_discount_amount
                 )
-                self.discount_balance = self.move_id.amount_total_signed + discount
+                self.discount_balance = (
+                    self.origin_discount_balance - refund_discount_amount
+                )
         return values

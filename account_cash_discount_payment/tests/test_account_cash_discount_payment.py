@@ -30,6 +30,7 @@ class TestAccountCashDiscountPaymentCommon(TransactionCase):
             }
         )
         cls.company = cls.env.ref("base.main_company")
+        cls.company.early_pay_discount_computation = "included"
         cls.purchase_journal = cls.Journal.create(
             {
                 "name": "Purchase journal",
@@ -105,6 +106,7 @@ class TestAccountCashDiscountPaymentCommon(TransactionCase):
                 "ref": ref,
                 "date": Date.today(),
                 "invoice_date": Date.today(),
+                "invoice_payment_term_id": self.early_pay_25_percents_10_days.id,
                 "payment_mode_id": self.payment_mode_out.id,
                 "invoice_line_ids": [
                     (
