@@ -8,6 +8,9 @@ class AccountMoveLine(models.Model):
 
     _inherit = "account.move.line"
 
+    def _get_discount_amount(self, base_amount):
+        return base_amount * (self.discount_percentage / 100)
+
     def _prepare_payment_line_vals(self, payment_order):
         self.ensure_one()
         values = super()._prepare_payment_line_vals(payment_order)
@@ -42,7 +45,7 @@ class AccountMoveLine(models.Model):
                     base_amount *= -1
                     amount_residual *= -1
                 # apply discount
-                discount = base_amount * (self.discount_percentage / 100)
+                discount = self._get_discount_amount(base_amount)
                 amount_with_discount = amount_residual - discount
                 values["amount_currency"] = amount_with_discount
                 # update discount_amount_currency on aml
