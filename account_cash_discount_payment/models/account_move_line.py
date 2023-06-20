@@ -20,21 +20,34 @@ class AccountMoveLine(models.Model):
 
                 # compute discount amount
                 if self.currency_id:
-                    base_amount = self.amount_residual_currency
+                    amount_residual = self.amount_residual_currency
                 else:
-                    base_amount = self.amount_residual
+                    amount_residual = self.amount_residual
+
+                if self.company_id.early_pay_discount_computation in (
+                    "excluded",
+                    "mixed",
+                ):
+                    base_amount = amount_residual / (
+                        (
+                            self.move_id.amount_tax_signed
+                            + self.move_id.amount_untaxed_signed
+                        )
+                        / self.move_id.amount_untaxed_signed
+                    )
+                else:
+                    base_amount = amount_residual
 
                 if self.move_id.is_invoice():
-                    amount_with_discount = base_amount * -1
+                    base_amount *= -1
+                    amount_residual *= -1
                 # apply discount
-                amount_with_discount *= 1 - (self.discount_percentage / 100)
-
+                discount = base_amount * (self.discount_percentage / 100)
+                amount_with_discount = amount_residual - discount
                 values["amount_currency"] = amount_with_discount
                 # update discount_amount_currency on aml
-                self.discount_amount_currency = self.amount_currency - (
-                    base_amount + amount_with_discount
+                self.discount_amount_currency = (
+                    self.move_id.amount_total_in_currency_signed + discount
                 )
-                self.discount_balance = self.balance - (
-                    base_amount + amount_with_discount
-                )
+                self.discount_balance = self.move_id.amount_total_signed + discount
         return values

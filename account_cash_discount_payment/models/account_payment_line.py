@@ -36,6 +36,14 @@ class PaymentLine(models.Model):
                 amount_without_disc = rec.move_line_id.amount_residual_currency
             else:
                 amount_without_disc = rec.move_line_id.amount_residual
+            if self.company_id.early_pay_discount_computation in ("excluded", "mixed"):
+                amount_without_disc = amount_without_disc / (
+                    (
+                        rec.move_line_id.move_id.amount_tax_signed
+                        + rec.move_line_id.move_id.amount_untaxed_signed
+                    )
+                    / rec.move_line_id.move_id.amount_untaxed_signed
+                )
             rec.discount_amount = sign * (
                 amount_without_disc * rec.move_line_id.discount_percentage / 100
             )
