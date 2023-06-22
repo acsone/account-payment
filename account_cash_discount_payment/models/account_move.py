@@ -1,7 +1,7 @@
 # Copyright 2018 ACSONE SA/NV
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-from odoo import models
+from odoo import api, models
 
 DISCOUNT_ALLOWED_TYPES = (
     "in_invoice",
@@ -14,10 +14,9 @@ class AccountMove(models.Model):
 
     _inherit = "account.move"
 
-    def _compute_needed_terms(self):
-        res = super()._compute_needed_terms()
+    @api.onchange("invoice_payment_term_id")
+    def _onchange_discount_invoice_payment_term_id(self):
         self.line_ids.update({"discount_updated": False})
-        return res
 
     def _get_payment_move_lines(self):
         self.ensure_one()
