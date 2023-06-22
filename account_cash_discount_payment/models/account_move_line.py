@@ -84,5 +84,5 @@ class AccountMoveLine(models.Model):
             pay_with_discount = self.discount_date >= today
             values["pay_with_discount"] = pay_with_discount
             if pay_with_discount:
-                values["amount_with_discount"] = self._prepare_discount()
+                values["amount_currency"] = self._prepare_discount()
         return values
