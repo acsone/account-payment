@@ -39,6 +39,42 @@ class AccountMoveLine(models.Model):
 
     discount_updated = fields.Boolean()
 
+    def _prepare_discount(self):
+        # compute discount amount
+        if self.currency_id:
+            amount_residual = self.amount_residual_currency
+        else:
+            amount_residual = self.amount_residual
+
+        if self.move_id.is_invoice():
+            amount_residual *= -1
+        # apply discount
+        discount_amount_currency = (
+            self.discount_amount_currency
+            if not self.discount_updated
+            else self.origin_discount_amount_currency
+        )
+        discount = abs(self.amount_currency) - abs(discount_amount_currency)
+        refund_discount_amount = self.move_id._get_refunds_amount_total()[
+            "discount"
+        ]
+        amount_with_discount = (
+            amount_residual - discount + refund_discount_amount
+        )
+        # update discount_amount_currency on aml
+        if not self.discount_updated:
+            self.discount_updated = True
+            self.origin_discount_amount_currency = self.discount_amount_currency
+            self.origin_discount_balance = self.discount_balance
+        self.discount_amount_currency = (
+            self.origin_discount_amount_currency - refund_discount_amount
+        )
+        self.discount_balance = (
+            self.origin_discount_balance - refund_discount_amount
+        )
+        return amount_with_discount
+        
+
     def _prepare_payment_line_vals(self, payment_order):
         self.ensure_one()
         values = super()._prepare_payment_line_vals(payment_order)
@@ -48,38 +84,5 @@ class AccountMoveLine(models.Model):
             pay_with_discount = self.discount_date >= today
             values["pay_with_discount"] = pay_with_discount
             if pay_with_discount:
-
-                # compute discount amount
-                if self.currency_id:
-                    amount_residual = self.amount_residual_currency
-                else:
-                    amount_residual = self.amount_residual
-
-                if self.move_id.is_invoice():
-                    amount_residual *= -1
-                # apply discount
-                discount_amount_currency = (
-                    self.discount_amount_currency
-                    if not self.discount_updated
-                    else self.origin_discount_amount_currency
-                )
-                discount = abs(self.amount_currency) - abs(discount_amount_currency)
-                refund_discount_amount = self.move_id._get_refunds_amount_total()[
-                    "discount"
-                ]
-                amount_with_discount = (
-                    amount_residual - discount + refund_discount_amount
-                )
-                values["amount_currency"] = amount_with_discount
-                # update discount_amount_currency on aml
-                if not self.discount_updated:
-                    self.discount_updated = True
-                    self.origin_discount_amount_currency = self.discount_amount_currency
-                    self.origin_discount_balance = self.discount_balance
-                self.discount_amount_currency = (
-                    self.origin_discount_amount_currency - refund_discount_amount
-                )
-                self.discount_balance = (
-                    self.origin_discount_balance - refund_discount_amount
-                )
+                values["amount_with_discount"] = self._prepare_discount()
         return values

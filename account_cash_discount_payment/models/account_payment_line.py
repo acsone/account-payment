@@ -60,16 +60,8 @@ class PaymentLine(models.Model):
         invoice_line = self.move_line_id
         currency = self.currency_id
 
-        # compute discount amount
-        if self.currency_id:
-            base_amount = invoice_line.amount_residual_currency
-        else:
-            base_amount = invoice_line.amount_residual
-
-        if self.order_id.payment_type == "outbound":
-            amount_with_discount = base_amount * -1
         # apply discount
-        amount_with_discount *= 1 - (invoice_line.discount_percentage / 100)
+        amount_with_discount = invoice_line._prepare_discount()
 
         # When pay_with_discount is changed to False, we do not want to lose
         # the amount if the user changed it manually (related to the
@@ -86,14 +78,6 @@ class PaymentLine(models.Model):
         if self.pay_with_discount:
             # apply discount
             self.amount_currency = amount_with_discount
-            # update discount_amount_currency on aml
-            # amount_with_discount is negative
-            self.move_line_id.discount_amount_currency = (
-                invoice_line.amount_currency - (base_amount + amount_with_discount)
-            )
-            self.move_line_id.discount_balance = invoice_line.balance - (
-                base_amount + amount_with_discount
-            )
         elif change_base_amount:
             if self.currency_id:
                 amount_currency = invoice_line.amount_residual_currency
@@ -116,10 +100,11 @@ class PaymentLine(models.Model):
             return
         invoice_line = self.move_line_id
         currency = self.currency_id
+        amount_with_discount = invoice_line._prepare_discount()
         can_pay_with_discount = (
             float_compare(
                 self.amount_currency,
-                invoice_line.amount_residual * -1,
+                amount_with_discount,
                 precision_rounding=currency.rounding,
             )
             == 0

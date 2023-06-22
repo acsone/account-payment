@@ -14,9 +14,11 @@ class AccountMove(models.Model):
 
     _inherit = "account.move"
 
-    @api.onchange("invoice_payment_term_id")
-    def _onchange_discount_invoice_payment_term_id(self):
-        self.line_ids.update({"discount_updated": False})
+    def write(self, vals):
+        res = super().write(vals)
+        if "invoice_payment_term_id" in vals:
+            self.line_ids.write({'discount_updated': False})
+        return res
 
     def _get_payment_move_lines(self):
         self.ensure_one()
