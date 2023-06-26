@@ -32,11 +32,11 @@ class PaymentLine(models.Model):
         for rec in self:
             sign = -1 if rec.order_id.payment_type == "outbound" else 1
 
-            if self.currency_id:
+            if rec.currency_id:
                 amount_without_disc = rec.move_line_id.amount_residual_currency
             else:
                 amount_without_disc = rec.move_line_id.amount_residual
-            rec.discount_amount = sign * (amount_without_disc) - self.amount_currency
+            rec.discount_amount = sign * (amount_without_disc) - rec.amount_currency
 
     @api.depends("order_id.state")
     def _compute_toggle_pay_with_discount_allowed(self):
