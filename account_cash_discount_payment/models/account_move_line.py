@@ -8,23 +8,27 @@ class AccountMoveLine(models.Model):
 
     _inherit = "account.move.line"
 
-    discount_due_date = fields.Date(
-        related="move_id.discount_due_date",
-        readonly=True,
-    )
-    discount_amount = fields.Monetary(
-        related="move_id.discount_amount",
-        readonly=True,
-    )
+    def _get_amount_after_discount(self):
+        percentage = 1 - (self.discount_percentage / 100.0)
+        amount_residual = (
+            self.amount_residual - self.move_id._get_refunds_amount_total()
+        )
+
+        if self.move_id.is_invoice():
+            amount_residual *= -1
+
+        discount_amount = self.currency_id.round(amount_residual * percentage)
+
+        return discount_amount
 
     def _prepare_payment_line_vals(self, payment_order):
         self.ensure_one()
-        values = super(AccountMoveLine, self)._prepare_payment_line_vals(payment_order)
+        values = super()._prepare_payment_line_vals(payment_order)
 
-        move = self.move_id
-        if move and move.discount_due_date and move.has_discount:
-            pay_with_discount = move._can_pay_invoice_with_discount()
+        if self.discount_date and self.discount_percentage:
+            today = fields.Date.today()
+            pay_with_discount = self.discount_date >= today
             values["pay_with_discount"] = pay_with_discount
             if pay_with_discount:
-                values["amount_currency"] = move.residual_with_discount
+                values["amount_currency"] = self._get_amount_after_discount()
         return values
