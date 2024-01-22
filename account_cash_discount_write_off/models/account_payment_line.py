@@ -35,7 +35,13 @@ class PaymentLine(models.Model):
                     }
                 )
 
-        open_balance = self._get_open_balance(conversion_rate)
+        open_balance = (
+            sum(
+                rec._get_amount_after_discount()[0]
+                for rec in self.mapped("move_line_id")
+            )
+            * conversion_rate
+        )
 
         if epd_aml_values_list:
             early_payment_values = rec.env[
@@ -48,27 +54,3 @@ class PaymentLine(models.Model):
                 payment_vals["write_off_line_vals"] += r
 
         return payment_vals
-
-    def _get_open_balance(self, conversion_rate):
-        open_balance = 0
-        for invoice in self.mapped("move_line_id").mapped("move_id"):
-            payment_sign = (
-                -1 if invoice.payment_mode_id.payment_type == "outbound" else 1
-            )
-            # compute open amount
-            refunds_amount_total = 0
-            sign = -1 if invoice.is_outbound() else 1
-            for invoice_line in invoice.line_ids:
-                # compute discount amount
-                amount_of_discount = sign * invoice_line.amount_residual_currency
-                amount_of_discount *= 1 - (invoice_line.discount_percentage / 100)
-                refunds_amount_total += amount_of_discount
-
-            open_amount_currency = (
-                invoice.amount_residual - refunds_amount_total
-            ) * payment_sign
-
-            open_balance += self.company_currency_id.round(
-                open_amount_currency * conversion_rate
-            )
-        return open_balance
