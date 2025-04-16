@@ -22,14 +22,16 @@ class AccountMove(models.Model):
 
     def _get_payment_move_lines(self):
         self.ensure_one()
-        line_ids = []
+        lines = []
         for line in self.line_ids:
             account_type = line.account_id.account_type
             if account_type not in ("asset_receivable", "liability_payable"):
                 continue
-            line_ids.extend([rp.credit_move_id.id for rp in line.matched_credit_ids])
-            line_ids.extend([rp.debit_move_id.id for rp in line.matched_debit_ids])
-        return self.env["account.move.line"].browse(set(line_ids))
+            for rp in line.matched_credit_ids:
+                lines.append((rp.credit_move_id,rp.credit_amount_currency))
+            for rp in line.matched_debit_ids:
+                lines.append((rp.debit_move_id,rp.debit_amount_currency))
+        return lines
 
     def _get_refunds_amount_total(self):
         self.ensure_one()
@@ -39,11 +41,13 @@ class AccountMove(models.Model):
         expected_refund_type = False
         if inv_type in DISCOUNT_ALLOWED_TYPES and inv_type.endswith("invoice"):
             expected_refund_type = inv_type.replace("invoice", "refund")
-        for pmove_line in self._get_payment_move_lines():
+        for (pmove_line,reconciled_amount) in self._get_payment_move_lines():
             pmove_line_move = pmove_line.move_id
             if pmove_line_move and pmove_line_move.move_type == expected_refund_type:
-                refunds_discount_total += abs(pmove_line.amount_currency) - abs(
-                    pmove_line.discount_amount_currency
+                discount_amount = pmove_line.discount_amount_currency * (reconciled_amount/pmove_line.amount_currency)
+
+                refunds_discount_total += abs(reconciled_amount) - abs(
+                    discount_amount
                 )
-                refunds_amount_total += pmove_line_move.amount_total
+                refunds_amount_total += reconciled_amount
         return {"discount": refunds_discount_total, "total": refunds_amount_total}
