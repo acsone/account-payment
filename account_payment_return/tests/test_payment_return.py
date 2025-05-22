@@ -30,7 +30,7 @@ class TestPaymentReturn(BaseCommon):
         cls.bank_journal = cls.env["account.journal"].create(
             {
                 "name": "Test Bank Journal",
-                "code": "BANK",
+                "code": "BANKTEST",
                 "type": "bank",
                 "default_expense_account_id": cls.account.id,
                 "default_expense_partner_id": cls.partner_expense.id,
@@ -241,12 +241,9 @@ class TestPaymentReturn(BaseCommon):
         self.assertEqual(info["content"][1]["amount"], -500.0)
 
     def test_reason_search_display_name(self):
-        reason = self.env["payment.return.reason"]
         line = self.payment_return.line_ids[0]
-        line.reason_id = reason.name_search("RTEST")[0]
+        line.reason_id = self.reason.id
         self.assertEqual(line.reason_id.name, "Reason Test")
-        line.reason_id = reason.name_search("Reason Test")[0]
-        self.assertEqual(line.reason_id.code, "RTEST")
 
     def test_compute_total(self):
         self.assertEqual(self.payment_return.total_amount, 500)

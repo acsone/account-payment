@@ -153,12 +153,17 @@ class PaymentReturn(models.Model):
 
     def _prepare_move_line(self, move, total_amount):
         self.ensure_one()
+        account = (
+            self.payment_method_line_id.payment_account_id
+            or self.journal_id.default_account_id
+        )
+        if not account:
+            raise UserError(_("Line duplicated: another line has the same move lines."))
         return {
             "name": move.ref,
             "debit": 0.0,
             "credit": total_amount,
-            "account_id": self.payment_method_line_id.payment_account_id.id
-            or self.company_id.account_journal_suspense_account_id.id,
+            "account_id": account.id,
             "move_id": move.id,
             "journal_id": move.journal_id.id,
         }
