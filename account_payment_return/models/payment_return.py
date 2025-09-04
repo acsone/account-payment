@@ -175,7 +175,6 @@ class PaymentReturn(models.Model):
             raise UserError(
                 _("You must input all moves references in the payment return.")
             )
-        invoices = self.env["account.move"]
         AccountMoveLine = self.env["account.move.line"]
         move = self.env["account.move"].create(self._prepare_return_move_vals())
         total_amount = 0.0
@@ -191,8 +190,8 @@ class PaymentReturn(models.Model):
                 # payment_aml: credit on customer account (from payment move)
                 # invoice_amls: debit on customer account (from invoice move)
                 invoice_amls = payment_aml.matched_debit_ids.mapped("debit_move_id")
+                invoice_amls._payment_returned(return_line)
                 all_move_lines |= payment_aml
-                invoices |= invoice_amls.mapped("move_id")
                 payment_aml.remove_move_reconcile()
                 to_reconcile_aml_list.append(
                     {
@@ -223,7 +222,6 @@ class PaymentReturn(models.Model):
                     ]
                 }
             )
-        invoices.write(self._prepare_invoice_returned_vals())
         self.write({"state": "done", "move_id": move.id})
         return True
 
@@ -293,6 +291,10 @@ class PaymentReturnLine(models.Model):
         string="Charges Partner",
         domain=[("supplier_rank", ">", 0)],
     )
+    def _prepare_invoice_returned_vals(self):
+        res = self.return_id._prepare_invoice_returned_vals()
+        res["last_returned_payment_reason_id"] = self.reason_id.id
+        return res
 
     def _compute_amount(self):
         for line in self:
