@@ -294,6 +294,11 @@ class PaymentReturnLine(models.Model):
         domain=[("supplier_rank", ">", 0)],
     )
 
+    def _prepare_invoice_returned_vals(self):
+        res = self.return_id._prepare_invoice_returned_vals()
+        res["last_returned_payment_reason_id"] = self.reason_id.id
+        return res
+
     def _compute_amount(self):
         for line in self:
             line.amount = sum(line.move_line_ids.mapped("credit"))

@@ -14,6 +14,15 @@ class AccountMove(models.Model):
         help="Invoice has been included on a payment that has been returned later.",
         copy=False,
     )
+    last_returned_payment_reason_id = fields.Many2one(
+        comodel_name="payment.return.reason",
+        string="Last Returned Payment Reason",
+    )
+
+    def _payment_returned(self, return_line):
+        vals = return_line._prepare_invoice_returned_vals()
+        if vals:
+            self.write(vals)
 
     def check_payment_return(self):
         returned_invoices = (
@@ -106,6 +115,9 @@ class AccountMoveLine(models.Model):
         column2="partial_reconcile_id",
         copy=False,
     )
+
+    def _payment_returned(self, return_line):
+        self.mapped("move_id")._payment_returned(return_line)
 
 
 class AccountPartialReconcile(models.Model):
