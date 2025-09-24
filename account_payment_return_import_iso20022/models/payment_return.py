@@ -14,20 +14,19 @@ class PaymentReturnLine(models.Model):
         matched = self.env["payment.return.line"]
         # noqa B023
         for line in self.filtered(lambda x: not x.move_line_ids and x.reference):
-            move_id = int(line.reference) if line.reference.isdigit() else -1
-            payments = self.env["account.payment"].search(
+            payment_id = int(line.reference) if line.reference.isdigit() else -1
+            payment = self.env["account.payment"].search(
                 [
-                    ("move_id", "=", move_id),
+                    ("id", "=", payment_id),
                     ("payment_order_id", "!=", False),
                 ],
             )
-            if payments:
-                line.partner_id = payments[0].partner_id
+            if payment:
+                line.partner_id = payment.partner_id
                 matched += line
-                for payment in payments:
-                    line.move_line_ids |= payment.move_id.line_ids.filtered(
-                        lambda x, payment=payment: x.account_id
-                        == payment.destination_account_id
-                        and x.partner_id == payment.partner_id
-                    )
+                line.move_line_ids |= payment.move_id.line_ids.filtered(
+                    lambda x, payment=payment: x.account_id
+                    == payment.destination_account_id
+                    and x.partner_id == payment.partner_id
+                )
         return super(PaymentReturnLine, self - matched)._find_match()
