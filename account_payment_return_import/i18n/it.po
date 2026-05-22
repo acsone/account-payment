@@ -25,8 +25,8 @@ msgstr ""
 #. odoo-python
 #: code:addons/account_payment_return_import/wizard/payment_return_import.py:0
 #, python-format
-msgid "%d transactions had already been imported and were ignored."
-msgstr "%d operazioni sono state ignorate perché già importate."
+msgid "%s transactions had already been imported and were ignored."
+msgstr "%s operazioni sono state ignorate perché già importate."
 
 #. module: account_payment_return_import
 #. odoo-python

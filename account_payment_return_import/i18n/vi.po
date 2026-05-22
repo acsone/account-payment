@@ -22,7 +22,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/account_payment_return_import/wizard/payment_return_import.py:0
 #, python-format
-msgid "%d transactions had already been imported and were ignored."
+msgid "%s transactions had already been imported and were ignored."
 msgstr ""
 
 #. module: account_payment_return_import
